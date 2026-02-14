@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: mattermost-postgres
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    volumes:
+      - ./volumes/db/var/lib/postgresql/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=${TZ}
+    networks:
+      - mattermost
+
+  mattermost:
+    image: ${MATTERMOST_IMAGE}:${MATTERMOST_IMAGE_TAG}
+    container_name: mattermost-app
+    restart: unless-stopped
+    user: "2000:2000"
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 200
+    read_only: ${MATTERMOST_CONTAINER_READONLY}
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./volumes/app/mattermost/config:/mattermost/config:rw
+      - ./volumes/app/mattermost/data:/mattermost/data:rw
+      - ./volumes/app/mattermost/logs:/mattermost/logs:rw
+      - ./volumes/app/mattermost/plugins:/mattermost/plugins:rw
+      - ./volumes/app/mattermost/client/plugins:/mattermost/client/plugins:rw
+      - ./volumes/app/mattermost/bleve-indexes:/mattermost/bleve-indexes:rw
+    environment:
+      - TZ=${TZ}
+      - MM_SQLSETTINGS_DRIVERNAME=postgres
+      - MM_SQLSETTINGS_DATASOURCE=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable&connect_timeout=10
+      - MM_BLEVESETTINGS_INDEXDIR=/mattermost/bleve-indexes
+      - MM_SERVICESETTINGS_SITEURL=http://${DOMAIN}:${HTTP_PORT}
+    ports:
+      - "${HTTP_PORT}:8065"
+      - "${CALLS_PORT}:${CALLS_PORT}/udp"
+      - "${CALLS_PORT}:${CALLS_PORT}/tcp"
+    networks:
+      - mattermost
+    depends_on:
+      - postgres
+
+networks:
+  mattermost:
+    driver: bridge

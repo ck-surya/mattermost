@@ -1,0 +1,16 @@
+# Override file for development environment
+# Copy this file to docker-compose.override.yml and customize as needed
+
+services:
+  mattermost:
+    environment:
+      # Development mode settings
+      - MM_SERVICESETTINGS_ENABLEDEVELOPER=true
+      - MM_SERVICESETTINGS_ENABLETESTING=true
+      - MM_LOGSETTINGS_CONSOLELEVEL=DEBUG
+      - MM_LOGSETTINGS_FILELEVEL=DEBUG
+    # Uncomment to use a different port for development
+    # ports:
+    #   - "8065:8065"
+    #   - "8443:8443/udp"
+    #   - "8443:8443/tcp"
