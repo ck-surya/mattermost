@@ -3,6 +3,9 @@
 
 services:
   mattermost:
+    networks:
+      - mattermost
+      - agents
     environment:
       # Development mode settings
       - MM_SERVICESETTINGS_ENABLEDEVELOPER=true
@@ -14,3 +17,7 @@ services:
     #   - "8065:8065"
     #   - "8443:8443/udp"
     #   - "8443:8443/tcp"
+
+networks:
+  agents:
+    external: true
